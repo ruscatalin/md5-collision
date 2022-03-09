@@ -6,7 +6,24 @@ from PyQt5.QtCore import QUrl
 import sys
 import os
 from md5 import MD5
+import binascii
 
+# binascii.hexlify(bytearray(array_alpha)) #might possibly help
+# def x(strColl1, strColl2):
+#     var byteColl1 = bytes(strColl1,'UTF-8');
+#     var byteColl2 = bytes(strColl2,'UTF-8');
+#     for i in range(0, strColl1.length()) #bytes in byte:
+#         if byteColl1[i] != byteColl2[i]:
+#           print(byteColl1[i], end=' ') #highlited
+#         else:
+#           print(byteColl1[i], end=' ') #simple
+#
+#     for i in range(0, strColl2.length()) #bytes in byte:
+#         if byteColl2[i] != byteColl1[i]:
+#           print(byteColl2[i], end=' ') #highlited
+#         else:
+#           print(byteColl2[i], end=' ') #simple
+#
 
 class MD5cracker(QDialog):
     def __init__(self):
@@ -47,3 +64,5 @@ window.show()
 play_audio()
 app.exec_()
 
+# str = 'muie';
+# x(str)
