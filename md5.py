@@ -36,6 +36,7 @@ class MD5(object):
     _Q = []
     _F = []
     _T = []
+    _R = []
 
     @classmethod
     def hash(cls, string):
@@ -152,6 +153,7 @@ class MD5(object):
                 temp = modular_add(temp, A)
                 cls._T.append(temp)
                 temp = rotate_left(temp, s[i % 4])
+                cls._R.append(temp)
                 temp = modular_add(temp, B)
 
                 cls._Q.append(temp)
@@ -190,3 +192,7 @@ class MD5(object):
     @classmethod
     def _get_F(cls):
         return cls._F
+
+    @classmethod
+    def _get_R(cls):
+        return cls._R
