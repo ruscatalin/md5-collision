@@ -24,6 +24,7 @@ import binascii
 #         else:
 #           print(byteColl2[i], end=' ') #simple
 #
+#     necessitates further integration with the gui
 
 class MD5cracker(QDialog):
     def __init__(self):
