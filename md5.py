@@ -34,6 +34,9 @@ class MD5(object):
     }
 
     _Q = []
+    _F = []
+    _T = []
+    _R = []
 
     @classmethod
     def hash(cls, string):
@@ -97,7 +100,7 @@ class MD5(object):
 
         # Compute the T table from the sine function. Note that the
         # RFC starts at index 1, but we start at index 0.
-        T = [floor(pow(2, 32) * abs(sin(i + 1))) for i in range(64)]
+        T = [floor(pow(2, 32) * abs(sin(i + 1))) for i in range(64)]  # This is AC in the thesis
 
         # The total number of 32-bit words to process, N, is always a
         # multiple of 16.
@@ -144,10 +147,13 @@ class MD5(object):
                 # the expression `A = D` below would overwrite it. We also cannot
                 # move `A = D` lower because the original `D` would already have
                 # been overwritten by the `D = C` expression.
+                cls._F.append(temp)
                 temp = modular_add(temp, X[k])
                 temp = modular_add(temp, T[i])
                 temp = modular_add(temp, A)
+                cls._T.append(temp)
                 temp = rotate_left(temp, s[i % 4])
+                cls._R.append(temp)
                 temp = modular_add(temp, B)
 
                 cls._Q.append(temp)
@@ -178,3 +184,15 @@ class MD5(object):
     @classmethod
     def _get_Q(cls):
         return cls._Q
+
+    @classmethod
+    def _get_T(cls):
+        return cls._T
+    
+    @classmethod
+    def _get_F(cls):
+        return cls._F
+
+    @classmethod
+    def _get_R(cls):
+        return cls._R
