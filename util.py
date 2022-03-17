@@ -89,7 +89,7 @@ def bsdr_naf(word):
 AC = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa, 0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8, 0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed, 0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a, 0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c, 0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70, 0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05, 0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665, 0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391]
 RC = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21]
 W = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 5, 8, 11, 14, 1, 4, 7, 10, 13, 0, 3, 6, 9, 12, 15, 2, 0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9]
-
+IV_initial = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]
 def get_AC():
     return AC
 
@@ -219,6 +219,113 @@ def wang_first_16_bitconditions(Q):
             if ones and zeroes: return True
             else: return False
         
+def botconditions17to64(Q):
+    def ones(t, indexes):
+        list = [Q[t][i] == 1 for i in indexes]
+        return not False in list
+
+    def zeroes(t, indexes):
+        list = [Q[t][i] == 0 for i in indexes]
+        return not False in list
+
+    def hats(t, indexes):
+        list = [Q[t][i] == Q[t - 1][i] for i in indexes]
+        return not False in list
+
+    def m(t, indexes):
+        list = [Q[t][i] == Q[t - 2][i] for i in indexes]
+        return not False in list
+    def tag(t, indexes):
+        list = [Q[t][i] == (-Q[t - 2][i]) for i in indexes]
+        return not False in list
+
+    print("Checking the Wang's bitconditions for the 16->64 rounds...")
+    for t in range(16, 64):
+        if t == 16:
+            ones = ones(t, [2])
+            zeroes = zeroes(t, [0])
+            if ones and zeroes: continue
+            else: return False
+        elif t == 17:
+            zeroes = zeroes(t, [0,14])
+            hats = hats(t,[16, 28])
+            if zeroes and hats: continue
+            else: return False
+        elif t == 18:
+            ones = ones(t, [13])
+            zeroes = zeroes(t, [0])
+            hats = hats(t, [2])
+            if ones and zeroes and hats: continue
+            else: return False
+        elif t == 19:
+            zeroes = zeroes(t, [0,13])
+            if zeroes: continue
+            else: return False
+        elif t == 20:
+            zeroes = zeroes(t, [0])
+            if zeroes: continue
+            else: return False
+        elif t == 21:
+            zeroes = zeroes(t, [0])
+            hats = hats(t, [13])
+            if zeroes and hats: continue
+            else: return False
+        elif t == 22:
+            zeroes = zeroes(t, [0])
+            if zeroes: continue
+            else: return False
+        elif t == 23:
+            zeroes = zeroes(t, [0])
+            if zeroes: continue
+            else: return False
+        elif t == 24:
+            ones = ones(t, [1])
+            if ones: continue
+            else: return False
+        elif t >= 25 and t <= 47:
+            continue
+        elif t == 48:
+            m = m(t,[0])
+            if m: continue
+            else: return False
+        elif t == 49:
+            m = m(t,[0])
+            if m: continue
+            else: return False
+        elif t == 50:
+            tag = tag(t,[0])
+            if tag: continue
+            else: return False
+        elif t >= 51 and t<= 59:
+            m = m(t,[0])
+            if m: continue
+            else: return False
+        elif t == 60:
+            tag = tag(t, [0])
+            zeroes = zeroes(t, [6])
+            if tag and zeroes: continue
+            else: return False
+        elif t == 61:
+            tag = tag(t, [0])
+            ones = ones(t, [6])
+            if tag and ones: continue
+            else: return False
+        elif t == 62:
+            m = m(t,[0])
+            zeroes = zeroes(t, [6])
+            if m and zeroes: continue
+            else: return False
+        elif t == 63:
+            m = m(t,[0])
+            zeroes = zeroes(t,[6])
+            if m and zeroes: continue
+            else: return False
+        elif t == 64:
+            continue;
+
+    return True;
+
+
 
 
 # Once we can validate the first 16 Qs, we can produce the corresponding message words, according to the formula from pg 25 of the thesis
@@ -234,6 +341,18 @@ def wang_message_words(hash):
         word = modular_sub(word, get_AC[t])
         message_words.append(word)
     return message_words
+
+# taken from https://eprint.iacr.org/2004/264.pdf - pg 6, Table 1- The first block of the differential
+# will fill all the diferentials accordingly with the values that will be later use to compare the difference between the blocks
+def first_block_differential():
+    # sigmaX = X1 -X2 # TODO: make a function for each sigma of the values X, T, W, ...
+    # sigmaT[t] = modular_add(modular_add(sigmaf(t, Q[t], Q[t-1], Q[t-2]), sigmaQ[t-3]), sigmaW[t])
+
+
+
+#helper function that calculates the add-differences
+#def sigma(X):
+# return modular_sub(X(msgBloc1, t), X(msgBloc2, t))
 
 # def get_differences(hash, hash_prime):
 #     Q = hash.get_Q()
@@ -280,61 +399,230 @@ def wang_message_words(hash):
 #     return lst
 
 # # Table 2-3, pg 27 in the thesis.
-# def wang_first_path(hash, hash_prime):
-#     diff = get_differences(hash, hash_prime)
-#     for t in range(64):
-#         d = diff[t]
-#         rc = get_RC(t)
-        
-#         if t <= 3:
-#             #Example for 0 <= t <= 3:
-#             #dQt = 0, dFt = 0, dwt = 0, dT=0, RCt = get_RC(t)
-#             expected_delta_Q = diff_list()
-#             correct = check_differences(d, expected_delta_Q, 0, 0, 0, rc)
-#             if not correct:
-#                 return (False, t)
+def wang_first_path(hash, hash_prime):
+    diff = get_differences(hash, hash_prime)
+    for t in range(64):
+        d = diff[t]
+        rc = get_RC(t)
+        # TODO: Check if there is no message modification when the a condition fails
+        if t <= 3:
+            #Example for 0 <= t <= 3:
+            #dQt = 0, dFt = 0, dwt = 0, dT=0, RCt = get_RC(t)
+            expected_delta_Q = diff_list()
+            correct = check_differences(d, expected_delta_Q, 0, 0, 0, rc)
+            if not correct:
+                return (False, t)
                 
-#         elif t == 4:
-#             expected_delta_Q = diff_list()
-#             correct = check_differences(d, expected_delta_Q, 0, 2**31, 2**31, rc)
-        
-#         elif t == 5:
-#             q_diffs = diff_list(range(6, 22), [22])
-#         elif t == 6: 
-#         elif t == 7: 
-#         elif t == 8:
-#         elif t == 9:
-#         elif t == 10:
-#         elif t == 11:
-#         elif t == 12:
-#         elif t == 13:
-#         elif t == 14:
-#         elif t == 15:
-#         elif t == 16:
-#         elif t == 17:
-#         elif t == 18:
-#         elif t == 19:
-#         elif t == 20:
-#         elif t == 21:
-#         elif t == 22:
-#         elif t == 23:
-#         elif t == 24:
-#         elif t == 25:
-#         elif t >= 26 and t <= 33:
-#         elif t == 34:
-#         elif t == 35:
-#         elif t == 36:
-#         elif t == 37:
-#         elif t >= 38 and t <= 49:
-#         elif t == 50:
-#         elif t >= 51 and t <= 59:
-#         elif t == 60:
-#         elif t == 61:
-#         elif t == 62:
-#         elif t == 63:
-#         elif t == 64:
+        elif t == 4:
+            expected_delta_Q = diff_list()
+            correct = check_differences(d, expected_delta_Q, 0, 2**31, 2**31, rc)
+            if not correct:
+                return (False, t)
+        elif t == 5:
+            q_diffs = diff_list(range(6, 22), [22])
+            f_diffs = modular_add(2**11, 2**19)
+            t_diffs = modular_add(2**11, 2**19)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 12)
+            if not correct:
+                return (False, t)
+        elif t == 6:
+            q_diffs = [6,23,31]
+            f_diffs = modular_add(-2**10, -2**14)
+            t_diffs = modular_add(-2**10, -2**14)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 17)
+            if not correct:
+                return (False, t)
+        elif t == 7:
+            q = [range(0,4),range(6,10), range(26, 31)]
+            negq = [5, 11, 23, 25]
+            q_diffs = diff_list(q,negq)
+            f_diffs = modular_add(modular_add(modular_add(-2**2, 2**5), modular_add(2**10, 2**16)), modular_add(-2**25, -2**27))
+            t_diffs = modular_add(modular_add(modular_add(-2**2, 2**5), modular_add(2**10, 2**16)), modular_add(-2**25, -2**27))
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 22)
+            if not correct:
+                return (False, t)
+        elif t == 8:
+            q = [0, 15, 17, 18, 19]
+            negq = [16, 20, 23]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(modular_add(modular_add(2**6, 2**8), modular_add(2 ** 10, 2 ** 16)),
+                                  modular_add(-2**24, 2**31))
+            t_diffs = modular_add(modular_add(2**8, modular_add(2**10, 2**16)),
+                                  modular_add(-2**24, 2**31))
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 7)
+            if not correct:
+                return (False, t)
+        elif t == 9:
+            q = [1, 6, 7]
+            negq = [0, 8, 31]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(modular_add(modular_add(2**0, 2**6), modular_add(-2**20, -2**23)),
+                                  modular_add(2**26, 2**31))
+            t_diffs = modular_add(modular_add(2**0, -2**20),2**26)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 12)
+            if not correct:
+                return (False, t)
+        elif t == 10:
+            q = [13, 31]
+            negq = [12]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(modular_add(2**0, 2**6), modular_add(2**13, -2**23))
+            t_diffs = modular_add(2**13, -2**26)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 17)
+            if not correct:
+                return (False, t)
+        elif t == 11:
+            q_diffs = [30,31]
+            f_diffs = modular_add(-2**0, -2**8)
+            t_diffs = modular_add(modular_add(2**8, 2**17), -2**23)
+            correct = check_differences(d, q_diffs, f_diffs, 2**15, t_diffs, 22)
+            if not correct:
+                return (False, t)
+        elif t == 12:
+            q = [7, 13, 14, 15, 16, 17, 18, 31]
+            negq = [8, 19]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(modular_add(2**7, 2**17), 2**31)
+            t_diffs = modular_add(modular_add(2**0, 2**6), 2**17)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 7)
+            if not correct:
+                return (False, t)
+        elif t == 13:
+            q = [25,31]
+            negq = [24]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(-2**13, -2**31)
+            correct = check_differences(d, q_diffs, f_diffs, 0, -2**12, 12)
+            if not correct:
+                return (False, t)
+        elif t == 14:
+            q_diffs = [31]
+            f_diffs = modular_add(2**18, 2**31)
+            t_diffs = modular_add(2**18, -2**30)
+            correct = check_differences(d, q_diffs, f_diffs, 2**31, t_diffs, 17)
+            if not correct:
+                return (False, t)
+        elif t == 15:
+            q = [3, 31]
+            negq = [15]
+            q_diffs = diff_list(q, negq)
+            f_diffs = modular_add(2**25, 2**31)
+            t_diffs = modular_add(modular_add(-2**7, -2**13), 2**25)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs, 22)
+            if not correct:
+                return (False, t)
+        elif t == 16:
+            q = [31]
+            negq = [29]
+            q_diffs = diff_list(q, negq)
+            correct = check_differences(d, q_diffs, 2**31, 0, 2**24, 5)
+            if not correct:
+                return (False, t)
+        elif t == 17:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, 9)
+            if not correct:
+                return (False, t)
+        elif t == 18:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 2**15, 2**3, 14)
+            if not correct:
+                return (False, t)
+        elif t == 19:
+            q_diffs = [17,31]
+            correct = check_differences(d, q_diffs, 2**31, 0, -2**29, 20)
+            if not correct:
+                return (False, t)
+        elif t == 20:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, 5)
+            if not correct:
+                return (False, t)
+        elif t == 21:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, 9)
+            if not correct:
+                return (False, t)
+        elif t == 22:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 2**17, 14)
+            if not correct:
+                return (False, t)
+        elif t == 23:
+            correct = check_differences(d, 0, 0, 2**31, 0, 20)
+            if not correct:
+                return (False, t)
+        elif t == 24:
+            correct = check_differences(d, 0, 2**31, 2**31, 0, 5)
+            if not correct:
+                return (False, t)
+        elif t == 25:
+            correct = check_differences(d, 0, 0, 2**31, 0, 9)
+            if not correct:
+                return (False, t)
+        elif t >= 26 and t <= 33:
+            correct = check_differences(d, 0, 0, 0, 0, rc)
+            if not correct:
+                return (False, t)
+        elif t == 34:
+            correct = check_differences(d, 0, 0, 2**15, 2**15, 16)
+            if not correct:
+                return (False, t)
+        elif t == 35:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 2**31, 0, 23)
+            if not correct:
+                return (False, t)
+        elif t == 36:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 0, 0, 0, 4)
+            if not correct:
+                return (False, t)
+        elif t == 37:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 2**31, 0, 11)
+            if not correct:
+                return (False, t)
+        elif t >= 38 and t <= 49:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, rc)
+            if not correct:
+                return (False, t)
+        elif t == 50:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 0, 2**31, 0, 15)
+            if not correct:
+                return (False, t)
+        elif t >= 51 and t <= 59:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, rc)
+            if not correct:
+                return (False, t)
+        elif t == 60:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 0, 2**31, 0, 6)
+            if not correct:
+                return (False, t)
+        elif t == 61:
+            q_diffs = [31]
+            correct = check_differences(d, q_diffs, 2**31, 2**15, 2**15, 10)
+            if not correct:
+                return (False, t)
+        elif t == 62:
+            q_diffs = [31, 25]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, 15)
+            if not correct:
+                return (False, t)
+        elif t == 63:
+            q_diffs = [31, 25]
+            correct = check_differences(d, q_diffs, 2**31, 0, 0, 21)
+            if not correct:
+                return (False, t)
+        elif t == 64:
+            #probably empty, there are some x in the table for most things
+            continue;
 
-#     return (True, -1)
+    return (True, -1)
 
 
 
