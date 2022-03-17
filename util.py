@@ -11,6 +11,14 @@ RL = lambda x, n: (x << n) | (x >> (32 - n))
 # RR will rotate x with n bits to the right.
 RR = lambda x, n: (x >> n) | (x << (32 - n))
 
+def sigma(word1, word2):
+    return modular_sub(word1, word2)
+
+def delta(word1, word2):
+    # return word1 xor word2
+    return [word1[i] ^ word2[i] for i in range(len(word1))]
+    return word1 ^ word2
+
 # # generate a 32 bit word with random bits
 # word = [random.getrandbits(1) for _ in range(16)]
 def bsdr_naf(word):
