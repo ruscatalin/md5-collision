@@ -90,6 +90,7 @@ AC = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0x
 RC = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21]
 W = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 5, 8, 11, 14, 1, 4, 7, 10, 13, 0, 3, 6, 9, 12, 15, 2, 0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9]
 IV_initial = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]
+
 def get_AC():
     return AC
 
@@ -218,8 +219,10 @@ def wang_first_16_bitconditions(Q):
             zeroes = zeroes(t, [0, 6, 28])
             if ones and zeroes: return True
             else: return False
+
+    return True;
         
-def botconditions17to64(Q):
+def bitconditions16to64(Q):
     def ones(t, indexes):
         list = [Q[t][i] == 1 for i in indexes]
         return not False in list
@@ -405,6 +408,8 @@ def wang_first_path(hash, hash_prime):
         d = diff[t]
         rc = get_RC(t)
         # TODO: Check if there is no message modification when the a condition fails
+        # TODO: If message modification applied => Check in the first round (0-16) with one auxiliary condition to avoid testing the
+        # same message block B twice (once directly, once through another message block Bb to which this substitution is applied
         if t <= 3:
             #Example for 0 <= t <= 3:
             #dQt = 0, dFt = 0, dwt = 0, dT=0, RCt = get_RC(t)
@@ -623,6 +628,24 @@ def wang_first_path(hash, hash_prime):
             continue;
 
     return (True, -1)
+
+
+#Helper function to split the message into 16 32-bits parts (2 bytes)
+# !! NOT TESTED
+def bytes(num):
+    return hex(num >> 8), hex(num & 0xFF)
+
+
+# Message modification technique to generate an improvement in efficency
+# fixing some of the message words when they fail some of the conditions in the second round
+# it is easy to generate messages that pass the first 16 steps of MD5 -> fixing the ones that pass speeds up the process
+# based on Wang original paper and the explanation from Chapter 2.7 from Steven's Thesis
+def messageModification(hash):
+    Q = hash.get_Q()
+    m = bytes(hash)
+    mHat = m
+    # the example in Stevens book is for a particular case of Q[17] = 1 instead of 0; I am not sure if this formula applies
+    # to all casses or how it applies
 
 
 
