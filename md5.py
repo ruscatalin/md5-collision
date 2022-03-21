@@ -50,6 +50,10 @@ class MD5(object):
     @classmethod
     def _step_1(cls):
         # Convert the string to a bit array.
+        cls._Q = []
+        cls._F = []
+        cls._T = []
+        cls._R = []
         bit_array = bitarray(endian="big")
         bit_array.frombytes(cls._string.encode("utf-8"))
 

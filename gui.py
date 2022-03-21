@@ -2,11 +2,13 @@ from PyQt5 import uic
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QTextEdit, QDialog, QSlider
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, QThread
 import sys
 import os
 from md5 import MD5
 import binascii
+import main
+import threading
 
 # binascii.hexlify(bytearray(array_alpha)) #might possibly help
 # def x(strColl1, strColl2):
@@ -53,9 +55,17 @@ volume_slider = window.findChild(QSlider, 'volumeSlider')
 def update_output(text):
     output.setText(text)
 
+def button_switch():
+    status = button.isEnabled()
+    button.setEnabled(not status)
+
 def click():
-    print(MD5.hash(input.toPlainText()))
-    update_output(MD5.hash(input.toPlainText()))
+    # print(MD5.hash(input.toPlainText()))
+    thread = threading.Thread(target=main.start_cracking)
+    thread.start()
+    # main.start_cracking()
+    update_output("Cracking...")
+    button_switch()
     # update_output("Clicked!")
 
 def update_volume(value):
@@ -81,9 +91,9 @@ def play_audio():
 button.clicked.connect(click)
 volume_slider.valueChanged.connect(slide)
 
-window.show()
-play_audio()
-app.exec_()
-
-# str = 'muie';
-# x(str)
+def start_app():
+    window.show()
+    play_audio()
+    input.setText(main.M2)
+    input.setEnabled(False)
+    app.exec_()
