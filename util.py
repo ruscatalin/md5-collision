@@ -294,49 +294,51 @@ def generate_message_from_Qs(Q):
 # will fill all the diferentials accordingly with the values that will be later use to compare the difference between the blocks
 
 
-# def get_differences(hash, hash_prime):
-#     Q = hash.get_Q()
-#     Q_prime = hash_prime.get_Q()
-#     F = hash.get_F()
-#     F_prime = hash_prime.get_F()
-#     T = hash.get_T()
-#     T_prime = hash_prime.get_T()
-#     w = 0 # TODO: Figure this out
-#     w_prime = 0 # TODO: Figure this out
-#     differences = []
-#     for t in range(0, 64):
-#         rc = get_RC(t)
+def get_differences(hash, hash_prime):
+    Q = hash.get_Q()
+    Q_prime = hash_prime.get_Q()
+    F = hash.get_F()
+    F_prime = hash_prime.get_F()
+    T = hash.get_T()
+    T_prime = hash_prime.get_T()
+    # w = 0 # TODO: Figure this out
+    # w_prime = 0 # TODO: Figure this out
+    differences = []
+    for t in range(0, 64):
+        rc = get_RC(t)
 
-#         delta_Q = []
-#         for i in range(len(Q[t])):
-#             delta_Q.append((Q_prime[t][i] - Q[t][i]) % 2)
+        delta_Q = []
+        for i in range(len(Q[t])):
+            delta_Q.append((Q_prime[t][i] - Q[t][i]) % 2)
 
         
-#         delta_Q = bsdr_naf(delta_Q)
+        delta_Q = bsdr_naf(delta_Q)
         
-#         delta_F = F_prime[t] - F[t]
-#         delta_w = 0 # TODO: Figure this out
-#         delta_T = T_prime[t] - T[t]
+        delta_F = F_prime[t] - F[t] # TODO: Change this, formula on page 23 stevens
+        # delta_w = 0 # TODO: Figure this out
+        delta_T = T_prime[t] - T[t] # TODO: Change this, formula on page 24 stevens
 
-#         differences.append({'Q': delta_Q, 'F': delta_F, 'w': delta_w, 'T': delta_T, 'RC': rc})
+        differences.append({'Q': delta_Q, 'F': delta_F, 'w': delta_w, 'T': delta_T, 'RC': rc})
+        # differences.append({'Q': delta_Q, 'F': delta_F, 'T': delta_T, 'RC': rc})
 
-#     return differences
+    return differences
 
-# def check_differences(d, dq, df, dw, dt, rc):
-#     if d['Q'] != d or d['F'] != df or d['w'] != dw or d['T'] != dt or d['RC'] != rc:
-#         return False
-#     return True
+def check_differences(d, dq, df, dw, dt, rc):
+    if d['Q'] != d or d['F'] != df or d['w'] != dw or d['T'] != dt or d['RC'] != rc:
+        return False
+    # if ()
+    return True
 
 
 # # Generate a list of values -1 to 1, where items with indices in positive are 1, and in negative are -1
 # # 1 => bit at pos x has to match, -1 => bit at pos x has to be different, 
-# def diff_list(positive = [], negative = []):
-#     lst = [0] * 32
-#     for pos in positive: 
-#         lst[pos] = 1
-#     for neg in negative:
-#         lst[neg] = -1
-#     return lst
+def diff_list(positive = [], negative = []):
+    lst = [0] * 32
+    for pos in positive:
+        lst[pos] = 1
+    for neg in negative:
+        lst[neg] = -1
+    return lst
 
 # # Table 2-3, pg 27 in the thesis.
 def wang_first_path(hash, hash_prime):
