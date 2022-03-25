@@ -26,6 +26,7 @@ class MD5Buffer(Enum):
 
 class MD5(object):
     _string = None
+    _bit_array = None
     _buffers = {
         MD5Buffer.A: None,
         MD5Buffer.B: None,
@@ -39,42 +40,57 @@ class MD5(object):
     _R = []
 
     @classmethod
-    def hash(cls, string):
+    def hash(cls, bits=None, string=None):
         cls._string = string
 
-        preprocessed_bit_array = cls._step_2(cls._step_1())
+        if bits is not None:
+            preprocessed_bit_array = cls._step_2(cls._step_1(bits))
+        else:
+            preprocessed_bit_array = cls._step_2(cls._step_1(cls._string))
+
         cls._step_3()
         cls._step_4(preprocessed_bit_array)
         return cls._step_5()
 
     @classmethod
-    def _step_1(cls):
+    def _step_1(cls, bits=None):
         # Convert the string to a bit array.
         cls._Q = []
         cls._F = []
         cls._T = []
         cls._R = []
-        bit_array = bitarray(endian="big")
-        bit_array.frombytes(cls._string.encode("utf-8"))
-
+        # if cls._string is not None:
+        cls._bit_array = bitarray(endian="big")
+        cls._bit_array.frombytes(cls._string.encode("utf-8"))
+        # else:
+        #     cls._bit_array = bits
+        
+        
         # Pad the string with a 1 bit and as many 0 bits required such that
         # the length of the bit array becomes congruent to 448 modulo 512.
         # Note that padding is always performed, even if the string's bit
         # length is already conguent to 448 modulo 512, which leads to a
         # new 512-bit message block.
-        bit_array.append(1)
-        while len(bit_array) % 512 != 448:
-            bit_array.append(0)
+        cls._bit_array.append(1)
+
+        if bits is None:
+            while len(cls._bit_array) % 512 != 448:
+                cls._bit_array.append(0)
 
         # For the remainder of the MD5 algorithm, all values are in
         # little endian, so transform the bit array to little endian.
-        return bitarray(bit_array, endian="little")
+
+        print('_bit_array at step 1: {}'.format(cls._bit_array))
+        return bitarray(cls._bit_array, endian="little")
 
     @classmethod
     def _step_2(cls, step_1_result):
         # Extend the result from step 1 with a 64-bit little endian
         # representation of the original message length (modulo 2^64).
-        length = (len(cls._string) * 8) % pow(2, 64)
+        if cls._string is None:
+            length = (32 * 8) % pow(2, 64)
+        else:
+            length = (len(cls._string) * 8) % pow(2, 64)
         length_bit_array = bitarray(endian="little")
         length_bit_array.frombytes(struct.pack("<Q", length))
 
@@ -167,6 +183,7 @@ class MD5(object):
                 D = C
                 C = B
                 B = temp
+
 
             # Update the buffers with the results from this chunk.
             cls._buffers[MD5Buffer.A] = modular_add(cls._buffers[MD5Buffer.A], A)

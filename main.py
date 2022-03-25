@@ -1,5 +1,6 @@
 import gui
-from md5 import MD5
+import md51
+# from md51 import *
 from util import *
 import secrets
 import string
@@ -9,10 +10,9 @@ alphabet = string.ascii_letters
 ## two 512-bit messages: one should be fixed, one should be changed
 # # M1 will be a random message of 512 random bits. Use secrets to generate the random bits.
 M1 = ''.join(secrets.choice(alphabet) for i in range(16))
-M2 = 'We like turtles!'
+M2 = 'Hello Hello'
 
-if __name__ == '__main__':
-    gui.start_app()
+
 
 
 def write_to_file(filename, text):
@@ -44,5 +44,34 @@ def start_cracking():
             hM1 = MD5.hash(M1)
             Q_M1 = MD5._get_Q()
     
-    gui.update_output('Collision found: {}'.format(M1))
-    gui.button_switch()
+    # gui.update_output('Collision found: {}'.format(M1))
+    # gui.button_switch()
+
+
+if __name__ == '__main__':
+
+    from bitarray import bitarray
+
+    # gui.start_app()
+    # start_cracking()
+    generated_Qs = generate_first16_Qs()
+    message = generate_message_from_Qs(generated_Qs)
+    # convert each element of message to bytes and then to string
+    stringed = []
+    for m in message:
+        #convert m to bytes
+        m_bytes = m.to_bytes(4, byteorder='big')
+        stringed.append(m_bytes)
+
+    concatenated_bytes = b''.join(stringed)
+
+    hM1 = md51.hash(concatenated_bytes)
+    Q = md51.Q
+    
+
+    # Start cracking from here:...
+
+    # print(hash(b"177"))
+    
+
+
