@@ -4,13 +4,12 @@ from md5 import MD5
 from util import *
 import secrets
 import string
- 
+
 alphabet = string.ascii_letters
 ## two 512-bit messages: one should be fixed, one should be changed
 # # M1 will be a random message of 512 random bits. Use secrets to generate the random bits.
 M1 = "".join(secrets.choice(alphabet) for i in range(16))
 M2 = "We like turtles!"
-
 
 
 def write_to_file(filename, text):
@@ -21,8 +20,9 @@ def write_to_file(filename, text):
 
 def start_cracking():
 
+    # FIRST
 
-    Q = {
+    Q0 = {
         -3: "01100111010001010010001100000001",
         -2: "11101111110011011010101110001001",
         -1: "10011000101110101101110011111110",
@@ -47,12 +47,36 @@ def start_cracking():
 
     M0 = []
 
-    generateQs(Q)
-    print(Q)
-    deriveM0s(Q)
+    generateQs(Q0)
+    # print(Q)
+    M0 = deriveMs(Q0)
 
-    M1 = M0 + [0, 0, 0, 0, 2^31, 0, 0, 0, 0, 0, 0, 2^15, 0, 0, 2^31, 0]
+    finishQs(Q0)
 
+    M0_ = M0 + [0, 0, 0, 0, 2 ** 31, 0, 0, 0, 0, 0, 0, 2 ** 15, 0, 0, 2 ** 31, 0]
+
+    bruteforce(Q0)
+
+    # SECOND
+
+    Q1 = {
+        -3: Q0[13],
+        -2: Q0[14],
+        -1: Q0[15],
+        0: Q0[16],
+    }
+
+    M1 = []
+
+    generateQs(Q1)
+    # print(Q)
+    M1 = deriveMs(Q1)
+
+    finishQs(Q1)
+
+    M1_ = M1 + [0, 0, 0, 0, 2 ** 31, 0, 0, 0, 0, 0, 0, -(2 ** 15), 0, 0, 2 ** 31, 0]
+
+    bruteforce(Q1)
 
 
 """     global M1, M2
@@ -102,62 +126,68 @@ def generateQs(Q):
         16: "0.1.............................",
     }
 
-    
-
     for t in range(1, 17):
-        for i in range (32):
+        for i in range(32):
             if bitconditions[t][i] == ".":
                 Q[t] += "0"
+                # maybe rand?
             elif bitconditions[t][i] == "0":
                 Q[t] += "0"
             elif bitconditions[t][i] == "1":
                 Q[t] += "1"
             elif bitconditions[t][i] == "^":
                 Q[t] += Q[t - 1][i]
-        
+
         # print("Q -> ", Q[t])
 
 
-# Python3 program for Left
-# Rotation and Right
-# Rotation of a String
-
 # In-place rotates s towards left by d
 def leftrotate(s, d):
-	tmp = s[d : ] + s[0 : d]
-	return tmp
+    tmp = s[d:] + s[0:d]
+    return tmp
+
 
 # In-place rotates s
 # towards right by d
 def rightrotate(s, d):
-
     return leftrotate(s, len(s) - d)
 
-# Driver code
-if __name__=="__main__":
-	
-	str1 = "GeeksforGeeks"
-	print(leftrotate(str1, 2))
 
-	str2 = "GeeksforGeeks"
-	print(rightrotate(str2, 2))
+# Driver code
+# if __name__=="__main__":
+
+# 	str1 = "GeeksforGeeks"
+# 	print(leftrotate(str1, 2))
+
+# 	str2 = "GeeksforGeeks"
+# 	print(rightrotate(str2, 2))
 
 # This code is contributed by Rutvik_56
 
 
 def ft_first16(x, y, z):
-    return (x & y) ^ (~x ^ z) 
+    return int((x & y), 2) ^ int((~x ^ z), 2)
 
-def deriveM0s(Q):
+
+def deriveMs(Q):
     # mt = RR(Qt+1 − Qt,RCt) − ft(Qt,Qt−1,Qt−2) − Qt−3 − ACt for 0 ≤ t ≤ 15.
 
     M0 = []
 
-    for t in range (3):
-        # print(int("0b" + Q[t + 1], 2) - int("0b" + Q[t], 2))
-        print("0b" + Q[t + 1])
-        print(rightrotate(Q[t+1] - Q[t], RC[t]))
-        M0[t] = rightrotate(Q[t+1] - Q[t], RC[t]) - ft_first16(Q[t],Q[t-1],Q[t-2]) - Q[t-3] - AC[t] 
+    for t in range(16):
+        # TODO
+        M0[t] = (
+            int(rightrotate(Q[t + 1] - Q[t], RC[t]), 2)
+            - ft_first16(Q[t], Q[t - 1], Q[t - 2])
+            - int(Q[t - 3], 2)
+            - AC[t]
+        )
+
+def finishQs(Q):
+    return
+
+def bruteforce(Q):
+    return
 
 if __name__ == "__main__":
     # gui.start_app()
