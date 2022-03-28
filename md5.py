@@ -104,7 +104,9 @@ class MD5(object):
 
         # Compute the T table from the sine function. Note that the
         # RFC starts at index 1, but we start at index 0.
-        T = [floor(pow(2, 32) * abs(sin(i + 1))) for i in range(64)]  # This is AC in the thesis
+        T = [
+            floor(pow(2, 32) * abs(sin(i + 1))) for i in range(64)
+        ]  # This is AC in the thesis
 
         # The total number of 32-bit words to process, N, is always a
         # multiple of 16.
@@ -114,7 +116,10 @@ class MD5(object):
         for chunk_index in range(N // 16):
             # Break the chunk into 16 words of 32 bits in list X.
             start = chunk_index * 512
-            X = [step_2_result[start + (x * 32) : start + (x * 32) + 32] for x in range(16)]
+            X = [
+                step_2_result[start + (x * 32) : start + (x * 32) + 32]
+                for x in range(16)
+            ]
 
             # Convert the `bitarray` objects to integers.
             X = [int.from_bytes(word.tobytes(), byteorder="little") for word in X]
@@ -183,7 +188,9 @@ class MD5(object):
         D = struct.unpack("<I", struct.pack(">I", cls._buffers[MD5Buffer.D]))[0]
 
         # Output the buffers in lower-case hexadecimal format.
-        return f"{format(A, '08x')}{format(B, '08x')}{format(C, '08x')}{format(D, '08x')}"
+        return (
+            f"{format(A, '08x')}{format(B, '08x')}{format(C, '08x')}{format(D, '08x')}"
+        )
 
     @classmethod
     def _get_Q(cls):
@@ -192,7 +199,7 @@ class MD5(object):
     @classmethod
     def _get_T(cls):
         return cls._T
-    
+
     @classmethod
     def _get_F(cls):
         return cls._F
