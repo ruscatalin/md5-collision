@@ -4,7 +4,7 @@ from util import *
 import secrets
 import string
 
-# first commit 
+# anoooother commit 
 alphabet = string.ascii_letters
 ## two 512-bit messages: one should be fixed, one should be changed
 # # M1 will be a random message of 512 random bits. Use secrets to generate the random bits.
