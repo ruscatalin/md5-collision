@@ -12,7 +12,10 @@ alphabet = string.ascii_letters
 M1 = ''.join(secrets.choice(alphabet) for i in range(16))
 M2 = 'Hello Hello'
 
-
+hM0 = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
+hM0_prime = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
+hM1 = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
+hM1_prime = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
 
 
 def write_to_file(filename, text):
@@ -21,31 +24,71 @@ def write_to_file(filename, text):
         f.close()
     
 
-def start_cracking():
-    global M1, M2
+def generate_valid_bytes(second_block=False, first_block_Qs=None):
+    if not second_block:
+        generated_Qs = generate_first16_Qs()
+    else:
+        generated_Qs = generate_first16_Qs_second_block(first_block_Qs)
+    message = generate_message_from_Qs(generated_Qs)
+    concatenated_bytes = int_list_to_concatenated_bytes(message)
+    return concatenated_bytes, message
 
-    hM1 = MD5.hash(M1)
-    Q_M1 = MD5._get_Q()    
-    hM2 = MD5.hash(M2)
-    Q_M2 = MD5._get_Q()
+
+
+def start_cracking(Qs, message):
 
     print("Started cracking...")
 
+    m0_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, 2**15, 0, 0, 2**31, 0]
+    m1_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, -2**15, 0, 0, 2**31, 0]
+
     while True:
-        # Check the first 16 bitconditions of M1
-        if wang_first_16_bitconditions(Q_M1):
-            # Write M1 to a log file
-            write_to_file('log.txt', '\n 3-16: ' + M1)
-            if bitconditions16to64(Q_M1): # Check the remaining bitconditions of block1
-                write_to_file('log.txt', '\n 16-64: ' + M1)
-                break
+        if bitconditions16to64(Qs): # Check the remaining bitconditions of block1
+            write_to_file('log.txt', '\n 16-64: ' + M1)
+            m0_prime = [modular_add(message[i], m0_diff[i]) for i in range(16)]
+            bytes_m0_prime = int_list_to_concatenated_bytes(m0_prime)
+            hM0_prime['hash'] = md51.hash(bytes_m0_prime)
+            hM0_prime['Q'] = md51.Q
+            hM0_prime['T'] = md51.T
+            hM0_prime['F'] = md51.F
+            hM0_prime['R'] = md51.R
+            hM0_prime['message'] = m0_prime
+
+            first_path_found, step = wang_first_path(hM0, hM0_prime)
+            if first_path_found:  # start looking into the second path
+                bytes, m1 = generate_valid_bytes(True, hM0['Q'])
+                hM1['hash'] = md51.hash(bytes)
+                hM1['Q'] = md51.Q
+                hM1['T'] = md51.T
+                hM1['F'] = md51.F
+                hM1['R'] = md51.R
+                hM1['message'] = m1
+
+                if bitconditions_second_block(hM1['Q']):
+                    m1_prime = [modular_add(m1[i], m1_diff[i]) for i in range(16)]
+                    bytes_m1_prime = int_list_to_concatenated_bytes(m1_prime)
+                    hM1_prime['hash'] = md51.hash(bytes_m1_prime)
+                    hM1_prime['Q'] = md51.Q
+                    hM1_prime['T'] = md51.T
+                    hM1_prime['F'] = md51.F
+                    hM1_prime['R'] = md51.R
+                    hM1_prime['message'] = m1_prime
+
+                    second_path_found, step = wang_second_path(hM1, hM1_prime)
+                    if second_path_found():
+                        print("Success")
+            
+            break
         else: # Brute force, god speed
-            M1 = ''.join(secrets.choice(alphabet) for i in range(16))
-            hM1 = MD5.hash(M1)
-            Q_M1 = MD5._get_Q()
+            bytes, message = generate_valid_bytes()
+            hM0 = md51.hash(bytes)
+            Qs = md51.Q
+            
     
     # gui.update_output('Collision found: {}'.format(M1))
     # gui.button_switch()
+
+
 
 
 if __name__ == '__main__':
@@ -53,25 +96,18 @@ if __name__ == '__main__':
     from bitarray import bitarray
 
     # gui.start_app()
-    # start_cracking()
-    generated_Qs = generate_first16_Qs()
-    message = generate_message_from_Qs(generated_Qs)
-    # convert each element of message to bytes and then to string
-    stringed = []
-    for m in message:
-        #convert m to bytes
-        m_bytes = m.to_bytes(4, byteorder='big')
-        stringed.append(m_bytes)
 
-    concatenated_bytes = b''.join(stringed)
-
-    hM1 = md51.hash(concatenated_bytes)
-    Q = md51.Q
-    
+    bytes, message = generate_valid_bytes()
+    hM0['message'] = message
+    hM0['hash'] = md51.hash(bytes)
+    hM0['Q'] = md51.Q
+    hM0['T'] = md51.T
+    hM0['F'] = md51.F
+    hM0['R'] = md51.R
 
     # Start cracking from here:...
-
-    # print(hash(b"177"))
+    
+    start_cracking(hM0['Q'], message) 
     
 
 

@@ -31,6 +31,10 @@ def left_rotate(x, amount):
 
 
 def md5(message):
+    Q = []
+    F = []
+    T = []
+    R = []
     message = bytearray(message)  # copy our input into a mutable buffer
     orig_len_in_bits = (8 * len(message)) & 0xffffffffffffffff
     message.append(0x80)
