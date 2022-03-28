@@ -1,18 +1,16 @@
+from telnetlib import NOP
 import gui
 from md5 import MD5
 from util import *
 import secrets
 import string
-
-# anoooother commit 
+ 
 alphabet = string.ascii_letters
 ## two 512-bit messages: one should be fixed, one should be changed
 # # M1 will be a random message of 512 random bits. Use secrets to generate the random bits.
 M1 = "".join(secrets.choice(alphabet) for i in range(16))
 M2 = "We like turtles!"
 
-if __name__ == "__main__":
-    gui.start_app()
 
 
 def write_to_file(filename, text):
@@ -23,7 +21,38 @@ def write_to_file(filename, text):
 
 def start_cracking():
 
-    generateQs()
+
+    Q = {
+        -3: "01100111010001010010001100000001",
+        -2: "11101111110011011010101110001001",
+        -1: "10011000101110101101110011111110",
+        0: "00010000001100100101010001110110",
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+        5: "",
+        6: "",
+        7: "",
+        8: "",
+        9: "",
+        10: "",
+        11: "",
+        12: "",
+        13: "",
+        14: "",
+        15: "",
+        16: "",
+    }
+
+    M0 = []
+
+    generateQs(Q)
+    print(Q)
+    deriveM0s(Q)
+
+    M1 = M0 + [0, 0, 0, 0, 2^31, 0, 0, 0, 0, 0, 0, 2^15, 0, 0, 2^31, 0]
+
 
 
 """     global M1, M2
@@ -52,9 +81,11 @@ def start_cracking():
     gui.button_switch() """
 
 
-def generateQs():
+def generateQs(Q):
 
     bitconditions = {
+        1: "................................",
+        2: "................................",
         3: "............0.......0....0......",
         4: "1.......0^^^1^^^^^^^1^^^^0......",
         5: "1...1.0.01..000000000000001..1.1",
@@ -71,31 +102,63 @@ def generateQs():
         16: "0.1.............................",
     }
 
-    Q = {
-        -3: "0011011000110111001101000011010100110010001100110011000000110001",
-        -2: "0100010101000110010000110100010001000001010000100011100000111001",
-        -1: "0011100100111000010000100100000101000100010000110100011001000101",
-        0: "0011000100110000001100110011001000110101001101000011011100110110",
-    }
+    
 
-    # for i in range(64):
-    #     for t in range (3,17):
-    #         if i == '.':
-    #             Q[t].join('0')
-    #         elif i == '0':
-    #             Q[t].join('0')
-    #         elif i == '1':
-    #             Q[t].join('1')
-    #         elif i == '^':
-    #             Q[t].join(Q)
+    for t in range(1, 17):
+        for i in range (32):
+            if bitconditions[t][i] == ".":
+                Q[t] += "0"
+            elif bitconditions[t][i] == "0":
+                Q[t] += "0"
+            elif bitconditions[t][i] == "1":
+                Q[t] += "1"
+            elif bitconditions[t][i] == "^":
+                Q[t] += Q[t - 1][i]
+        
+        # print("Q -> ", Q[t])
 
-    for t in range(3, 17):
-        for i in bitconditions[t]:
-            if i == ".":
-                Q[t].join("0")
-            elif i == "0":
-                Q[t].join("0")
-            elif i == "1":
-                Q[t].join("1")
-            elif i == "^":
-                Q[t].join(Q)
+
+# Python3 program for Left
+# Rotation and Right
+# Rotation of a String
+
+# In-place rotates s towards left by d
+def leftrotate(s, d):
+	tmp = s[d : ] + s[0 : d]
+	return tmp
+
+# In-place rotates s
+# towards right by d
+def rightrotate(s, d):
+
+    return leftrotate(s, len(s) - d)
+
+# Driver code
+if __name__=="__main__":
+	
+	str1 = "GeeksforGeeks"
+	print(leftrotate(str1, 2))
+
+	str2 = "GeeksforGeeks"
+	print(rightrotate(str2, 2))
+
+# This code is contributed by Rutvik_56
+
+
+def ft_first16(x, y, z):
+    return (x & y) ^ (~x ^ z) 
+
+def deriveM0s(Q):
+    # mt = RR(Qt+1 − Qt,RCt) − ft(Qt,Qt−1,Qt−2) − Qt−3 − ACt for 0 ≤ t ≤ 15.
+
+    M0 = []
+
+    for t in range (3):
+        # print(int("0b" + Q[t + 1], 2) - int("0b" + Q[t], 2))
+        print("0b" + Q[t + 1])
+        print(rightrotate(Q[t+1] - Q[t], RC[t]))
+        M0[t] = rightrotate(Q[t+1] - Q[t], RC[t]) - ft_first16(Q[t],Q[t-1],Q[t-2]) - Q[t-3] - AC[t] 
+
+if __name__ == "__main__":
+    # gui.start_app()
+    start_cracking()
