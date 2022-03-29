@@ -124,10 +124,10 @@ def bitconditions16to64(Q):
         list = [Qt[31 - i] == Qtm2[31 - i] for i in indexes]
         return not False in list
     def check_tag(indexes):
-        list = [Qt[31 - i] == (Qtm2[31 - i] & 0xffffffff) for i in indexes]  # TODO: Figure out how the -Qtm2 works. Remember Qtm2 is a bitstring
+        list = [Qt[31 - i] != Qtm2[31 - i] for i in indexes]  # TODO: Figure out how the -Qtm2 works. Remember Qtm2 is a bitstring
         return not False in list
 
-    print("Checking the Wang's bitconditions for the 16->64 rounds...")
+    # print("Checking the Wang's bitconditions for the 16->64 rounds...")
     for t in range(16, 64):
         Qt      = '{:032b}'.format(Q[t])
         Qtm1    = '{:032b}'.format(Q[t-1])
@@ -188,7 +188,7 @@ def bitconditions16to64(Q):
             if tag: continue
             else: return False
         elif t >= 51 and t<= 59:
-            m       = m([0])
+            m       = check_m([0])
             if m: continue
             else: return False
         elif t == 60:
@@ -884,13 +884,13 @@ def generate_first16_Qs():
 
     result = []
     for t in range(16):
-        # random_int = secrets.randbits(32)
-        # result.append(list("{:032b}".format(random_int)))
+        random_int = secrets.randbits(32)
+        result.append(list("{:032b}".format(random_int)))
 
         if t >= 3:  
-            result[t] = fill_Q(t)
+            result[t] = list(fill_Q(t))
             if t == 4:
-                fill_hats(result[t],[9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24], t)
+                fill_hats(result[t], [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24], t)
             elif t == 6:
                 fill_hats(result[t], [7, 28, 30], t)
             elif t == 9:

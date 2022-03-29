@@ -31,6 +31,7 @@ def left_rotate(x, amount):
 
 
 def md5(message):
+    global Q, F, T, R
     Q = []
     F = []
     T = []
