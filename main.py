@@ -44,7 +44,7 @@ def start_cracking(Qs, message):
 
     while True:
         if bitconditions16to64(Qs): # Check the remaining bitconditions of block1
-            write_to_file('log.txt', '\n 16-64: ' + M1)
+            write_to_file('log.txt', '\n 16-64: ' + message)
             m0_prime = [modular_add(message[i], m0_diff[i]) for i in range(16)]
             bytes_m0_prime = int_list_to_concatenated_bytes(m0_prime)
             hM0_prime['hash'] = md51.hash(bytes_m0_prime)
@@ -64,7 +64,7 @@ def start_cracking(Qs, message):
                 hM1['R'] = md51.R
                 hM1['message'] = m1
 
-                if bitconditions_second_block(hM1['Q']):  # TODO: maybe the parameter should be hM0_prime['Q']
+                if bitconditions_second_block(hM1['Q']): 
                     m1_prime = [modular_add(m1[i], m1_diff[i]) for i in range(16)]
                     bytes_m1_prime = int_list_to_concatenated_bytes(m1_prime)
                     hM1_prime['hash'] = md51.hash(bytes_m1_prime)

@@ -1,4 +1,5 @@
 
+from re import T
 import secrets
 
 modular_add = lambda a, b: (a + b) % pow(2, 32)
@@ -353,34 +354,41 @@ def get_differences(hash, hash_prime):
     T_prime = hash_prime['T']
     F = hash['F']
     F_prime = hash_prime['F']
-
     m = hash['message']
     m_prime = hash_prime['message']
 
-    differences = []
-    for t in range(0, 64):
-        rc = RC[t]
 
+    def get_Q_differences(Q, Q_prime, t):
         delta_Q = []
-        if t < 35:
-            for i in range(len(Q[t])):
+        for i in range(len(Q[t])):
                 if Q_prime[t][i] == 1 and Q[t][i] == 0:
                     delta_Q.append(1)
                 elif Q_prime[t][i] == 0 and Q[t][i] == 1:
                     delta_Q.append(-1)
                 else:
                     delta_Q.append(0)
+        return delta_Q
+
+    differences = []
+    for t in range(64):
+        
+        delta_Q = []
+        if t < 35:
+            delta_Q = get_Q_differences(Q, Q_prime, t)
         else:
             delta_Q.append(modular_sub(Q_prime[t], Q[t]))
 
-        
-        delta_F = modular_sub(F_prime[t], F[t]) # TODO: Change this, formula on page 23 stevens
-        delta_T = modular_sub(T_prime[t], T[t]) # TODO: Change this, formula on page 24 stevens
-        delta_w = modular_sub(m_prime[W[t]], m[W[t]])
+        if t >= 0:
+            delta_F = modular_sub(F_prime[t], F[t])
+            delta_T = modular_sub(T_prime[t], T[t])
+            delta_w = modular_sub(m_prime[W[t]], m[W[t]])
+            rc = RC[t]
+        else:
+            delta_F, delta_T, delta_w, rc = None, None, None, None 
 
         differences.append({'Q': delta_Q, 'F': delta_F, 'w': delta_w, 'T': delta_T, 'RC': rc})
 
-    return differences
+    return differences  # This will have extra 3 elements at the beginning, according to the table 2-5
 
 def check_differences(d, dq, df, dw, dt):
     if d['Q'] != dq or d['F'] != df or d['w'] != dw or d['T'] != dt:
@@ -411,14 +419,14 @@ def wang_first_path(hash, hash_prime):
             correct = check_differences(d, q_diffs, 0, 0, 0)
             if not correct:
                 return (False, t)
-                
         elif t == 4:
             q_diffs = generate_bsdr()
             correct = check_differences(d, q_diffs, 0, 2**31, 2**31)
             if not correct:
                 return (False, t)
         elif t == 5:
-            q_diffs = generate_bsdr(range(6, 22), [22])
+            posq = [i for i in range(6, 22)]
+            q_diffs = generate_bsdr(posq, [22])
             f_diffs = modular_add(2**11, 2**19)
             t_diffs = modular_add(2**11, 2**19)
             correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
@@ -432,7 +440,7 @@ def wang_first_path(hash, hash_prime):
             if not correct:
                 return (False, t)
         elif t == 7:
-            posq = [range(0,4), range(6,10), range(26, 31)]
+            posq = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 26, 27, 28, 29, 30, 31]
             negq = [5, 11, 23, 25]
             q_diffs = generate_bsdr(posq, negq)
             f_diffs = modular_add(modular_add(modular_add(-2**2, 2**5), modular_add(2**10, 2**16)), modular_add(-2**25, -2**27))
@@ -572,7 +580,7 @@ def wang_first_path(hash, hash_prime):
             correct = check_differences(d, q_diffs, 0, 2**15, 2**15)
             if not correct:
                 return (False, t)
-        elif t == 35:
+        elif t == 35 or t == 37:
             q_diffs = [2**31]
             correct = check_differences(d, q_diffs, 2**31, 2**31, 0)
             if not correct:
@@ -582,27 +590,12 @@ def wang_first_path(hash, hash_prime):
             correct = check_differences(d, q_diffs, 0, 0, 0)
             if not correct:
                 return (False, t)
-        elif t == 37:
-            q_diffs = [2**31]
-            correct = check_differences(d, q_diffs, 2**31, 2**31, 0)
-            if not correct:
-                return (False, t)
-        elif t >= 38 and t <= 49:
+        elif (t >= 38 and t <= 49) or (t >= 51 and t <= 59):
             q_diffs = [2**31]
             correct = check_differences(d, q_diffs, 2**31, 0, 0)
             if not correct:
                 return (False, t)
-        elif t == 50:
-            q_diffs = [2**31]
-            correct = check_differences(d, q_diffs, 0, 2**31, 0)
-            if not correct:
-                return (False, t)
-        elif t >= 51 and t <= 59:
-            q_diffs = [2**31]
-            correct = check_differences(d, q_diffs, 2**31, 0, 0)
-            if not correct:
-                return (False, t)
-        elif t == 60:
+        elif t == 50 or t == 60:
             q_diffs = [2**31]
             correct = check_differences(d, q_diffs, 0, 2**31, 0)
             if not correct:
@@ -612,24 +605,224 @@ def wang_first_path(hash, hash_prime):
             correct = check_differences(d, q_diffs, 2**31, 2**15, 2**15)
             if not correct:
                 return (False, t)
-        elif t == 62:
+        elif t == 62 or t == 63:
             q_diffs = [modular_add(2**31, 2**25)]
             correct = check_differences(d, q_diffs, 2**31, 0, 0)
             if not correct:
                 return (False, t)
-        elif t == 63:
-            q_diffs = [modular_add(2**31, 2**25)]
+        elif d['Q'] == [modular_add(2**31, 2**25)]:
+            return (True, -1)
+        else:
+            return (False, t)
+
+# Table 2-5, pg 29 in thesis
+def wang_second_path(hash, hash_prime):
+    diff = get_differences(hash, hash_prime)
+    for t in range(64):
+        d = diff[t]
+
+        if t == 0:
+            q_diffs = generate_bsdr([25, 31])
             correct = check_differences(d, q_diffs, 2**31, 0, 0)
             if not correct:
                 return (False, t)
-        elif t == 64:
-            q_diffs = [modular_add(2**31, 2**25)]
-            correct = d['Q'] == q_diffs  # The other conditions are crossed out in the table
+        elif t == 1:
+            q_diffs = generate_bsdr([25, 31])
+            correct = check_differences(d, q_diffs, 2**31, 0, 2**25)
             if not correct:
                 return (False, t)
-
-    return (True, -1)
-
+        elif t == 2:
+            q_diffs = generate_bsdr([5, 25, 31])
+            t_diffs = modular_add(2**31, 2**26)
+            correct = check_differences(d, q_diffs, 2**25, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 3:
+            posq = [7, 12, 21, 30, 31]
+            negq = [5, 6, 11, 16, 17, 18, 19, 20, 25, 26, 27, 28, 29]
+            q_diffs = generate_bsdr(posq, negq) 
+            f_diffs = modular_add(modular_add(modular_sub(-2**11, 2**21), modular_sub(2**25, 2**27)), 2**31)
+            t_diffs = modular_add(modular_add(-2**11, -2**21), -2**26)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 4:
+            posq = [1, 2, 3, 5, 26, 31]
+            negq = [4, 25]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(modular_add(modular_add(2**1, -2**3), -2**18), 2**26), 2**30)
+            w_diffs = 2**31
+            t_diffs = modular_add(modular_add(modular_add(modular_add(modular_add(2**1, 2**2), -2**18), 2**25), 2**26), 2**30)
+            correct = check_differences(d, q_diffs, f_diffs, w_diffs, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 5:
+            posq = [0, 7, 8, 12, 31]
+            negq = [6, 9, 10, 11]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(modular_add(modular_add(modular_add(modular_add
+                        (modular_add(-2**4, -2**5), -2**8), -2**20), -2**25), -2**26), 2**28), 2**30)
+            t_diffs = modular_add(modular_add(modular_add(modular_add(modular_add(-2**4, -2**8), -2**20), -2**26), 2**28), -2**30)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 6:
+            posq = [16, 20, 31]
+            negq = [17, 21]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(modular_add(modular_add(modular_add
+                        (modular_add(2**3, -2**5), -2**10), -2**11), -2**16), -2**21), -2**25)
+            t_diffs = modular_add(modular_add(modular_add(2**3, -2**10), -2**21), -2**31)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 7:
+            posq = [6, 7, 8, 27, 31]
+            negq = [9, 28]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(2**16, -2**27), 2**31)
+            t_diffs = modular_add(modular_add(modular_add(modular_add(-2**1, 2**5), 2**16), 2**25), -2**27)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 8:
+            posq = [16, 23, 24, 25, 31]
+            negq = [15, 17, 26]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(-2**6, 2**16), 2**25)
+            t_diffs = modular_add(modular_add(modular_add(modular_add(modular_add(2**0, 2**8), 2**9), 2**16), 2**25), -2**31)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 9:
+            posq = [1, 9, 31]
+            negq = [0, 6, 7, 8]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(modular_add(modular_add(2**0, 2**16), -2**26), 2**31)
+            t_diffs = modular_add(modular_add(2**0, -2**20), -2**26)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 10:
+            q_diffs = generate_bsdr([12, 31])
+            f_diffs = modular_add(2**6, 2**31)
+            correct = check_differences(d, q_diffs, f_diffs, 0, -2**27)
+            if not correct:
+                return (False, t)
+        elif t == 11:
+            q_diffs = generate_bsdr([31])
+            t_diffs = modular_add(-2**17, -2**23)
+            correct = check_differences(d, q_diffs, 2**31, -2**15, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 12:
+            posq = [13, 14, 15, 16, 17, 18, 31]
+            negq = [7, 19]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(2**17, 2**31)
+            t_diffs = modular_add(modular_add(2**0, 2**6), 2**17)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 13:
+            posq = [30, 31]
+            negq = [24, 25, 26, 27, 28, 29]
+            q_diffs = generate_bsdr(posq, negq)
+            f_diffs = modular_add(-2**13, 2**31)
+            correct = check_differences(d, q_diffs, f_diffs, 0, -2**12)
+            if not correct:
+                return (False, t)
+        elif t == 14:
+            q_diffs = generate_bsdr([31])
+            f_diffs = modular_add(2**18, 2**30)
+            t_diffs = f_diffs
+            correct = check_differences(d, q_diffs, f_diffs, 2**31, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 15:
+            q_diffs = generate_bsdr([3, 15, 31])
+            f_diffs = modular_add(-2**25, 2**31)
+            t_diffs = modular_add(modular_add(-2**7, -2**13), -2**25)
+            correct = check_differences(d, q_diffs, f_diffs, 0, t_diffs)
+            if not correct:
+                return (False, t)
+        elif t == 16:
+            q_diffs = generate_bsdr([31], [29])
+            correct = check_differences(d, q_diffs, 2**31, 0, 2**24)
+            if not correct:
+                return (False, t)
+        elif t == 17:
+            q_diffs = generate_bsdr([31])
+            correct = check_differences(d, q_diffs, 2**31, 0, 0)
+            if not correct:
+                return (False, t)
+        elif t == 18:
+            q_diffs = generate_bsdr([31])
+            correct = check_differences(d, q_diffs, 2**31, -2**15, 2**3)
+            if not correct:
+                return (False, t)
+        elif t == 19:
+            q_diffs = generate_bsdr([17, 31])
+            correct = check_differences(d, q_diffs, 2**31, 0, -2**29)
+            if not correct:
+                return (False, t)
+        elif t == 20 or t == 21:
+            q_diffs = generate_bsdr([31])
+            correct = check_differences(d, q_diffs, 2**31, 0, 0)
+            if not correct:
+                return (False, t)
+        elif t == 22:
+            q_diffs = generate_bsdr([31])
+            correct = check_differences(d, q_diffs, 2**31, 0, 2**17)
+            if not correct:
+                return (False, t)
+        elif t == 23 or t == 25:
+            correct = check_differences(d, generate_bsdr(), 0, 2**31, 0)
+            if not correct:
+                return (False, t)
+        elif t == 24:
+            correct = check_differences(d, generate_bsdr(), 2**31, 0, 0)
+            if not correct:
+                return (False, t)
+        elif t >= 26 or t <= 33:
+            correct = check_differences(d, generate_bsdr(), 0, 0, 0)
+            if not correct:
+                return (False, t)
+        elif t == 34:
+            correct = check_differences(d, generate_bsdr(), 0, -2**15, -2**15)
+            if not correct:
+                return (False, t)
+        elif t == 35 or t == 37:
+            q_diffs = [2**31]  # no bsdr is needed from now because we check the sigma, not the delta
+            correct = check_differences(d, q_diffs, 2**31, 2**31, 0)
+            if not correct:
+                return (False, t)
+        elif t == 36:
+            correct = check_differences(d, [2**31], 0, 0, 0)
+            if not correct:
+                return (False, t)
+        elif (t >= 38 and t <= 49) or (t >= 51 and t <= 59):
+            correct = check_differences(d, [2**31], 0, 0, 0)
+            if not correct:
+                return (False, t)
+        elif t == 50 or t == 60:
+            correct = check_differences(d, [2**31], 0, 2**31, 0)
+            if not correct:
+                return (False, t)
+        elif t == 61:
+            correct = check_differences(d, [2**31], 2**31, -2**15, -2**15)
+            if not correct:
+                return (False, t)
+        elif t == 62 or t == 63:
+            q_diffs = modular_add(2**31, -2**25)
+            correct = check_differences(d, q_diffs, 2**31, 0, 0)
+            if not correct:
+                return (False, t)
+        elif d['Q'] == [modular_add(2**31, -2**25)]:  # this is round 64
+            return (True, -1)
+        else:
+            return (False, t)
+            
 
 def fill_Q(t):
     random_int = secrets.randbits(32)
