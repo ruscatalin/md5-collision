@@ -1,48 +1,35 @@
 import gui
 import md51
-# from md51 import *
 from util import *
+from wang import *
 import secrets
-import string
 
-
-alphabet = string.ascii_letters
-## two 512-bit messages: one should be fixed, one should be changed
-# # M1 will be a random message of 512 random bits. Use secrets to generate the random bits.
-M1 = ''.join(secrets.choice(alphabet) for i in range(16))
-M2 = 'Hello Hello'
 
 hM0 = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
 hM0_prime = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
 hM1 = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
 hM1_prime = {'hash': None, 'Q': None, 'T': None, 'F': None, 'R': None, 'message': None}
 
-
-def write_to_file(filename, text):
-    with open(filename, 'w') as f:
-        f.write(text)
-        f.close()
-    
-
-def generate_valid_bytes(second_block=False, first_block_Qs=None):
-    if not second_block:
-        generated_Qs = generate_first16_Qs()
-    else:
-        generated_Qs = generate_first16_Qs_second_block(first_block_Qs)
-    message = generate_message_from_Qs(generated_Qs)
-    concatenated_bytes = int_list_to_concatenated_bytes(message)
-    return concatenated_bytes, message
+m0_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, 2**15, 0, 0, 2**31, 0]
+m1_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, -2**15, 0, 0, 2**31, 0]
 
 
-def start_cracking(Qs, message):
-
+def start_cracking():
+    global hM0, hM0_prime, hM1, hM1_prime
     print("Started cracking...")
 
-    m0_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, 2**15, 0, 0, 2**31, 0]
-    m1_diff = [0, 0, 0, 0, 2**31, 0, 0, 0, 0, 0, 0, -2**15, 0, 0, 2**31, 0]
-
     while True:
-        if bitconditions16to64(Qs): # Check the remaining bitconditions of block1
+        bytes, message = generate_valid_bytes()
+        hM0['message'] = message
+        hM0['hash'] = md51.hash(bytes)
+        hM0['Q'] = md51.Q
+        hM0['T'] = md51.T
+        hM0['F'] = md51.F
+        hM0['R'] = md51.R
+        if secrets.randbelow(10000) <= 4:
+            gui.update_output(''.join([str(m) for m in message]))
+
+        if bitconditions16to64(hM0['Q']): # Check the remaining bitconditions of block1
             write_to_file('log.txt', '\n 16-64: ' + message)
             m0_prime = [modular_add(message[i], m0_diff[i]) for i in range(16)]
             bytes_m0_prime = int_list_to_concatenated_bytes(m0_prime)
@@ -66,7 +53,7 @@ def start_cracking(Qs, message):
                     hM1['R'] = md51.R
                     hM1['message'] = m1
 
-                    if bitconditions_second_block(hM1['Q']): 
+                    if bitconditions16to64_second_block(hM1['Q']): 
                         m1_prime = [modular_add(m1[i], m1_diff[i]) for i in range(16)]
                         bytes_m1_prime = int_list_to_concatenated_bytes(m1_prime)
                         hM1_prime['hash'] = md51.hash(bytes_m1_prime)
@@ -77,7 +64,7 @@ def start_cracking(Qs, message):
                         hM1_prime['message'] = m1_prime
 
                         second_path_found, step = wang_second_path(hM1, hM1_prime)
-                        if second_path_found():
+                        if second_path_found:
                             print("Success")
                             success_string = "==========================\nM0: " + hM0['message'] + "\nM1: " + hM1['message'] + "\n-----------------------------" +\
                                 "\nM0_prime: " + hM0_prime['message'] + "\nM1_prime: " + hM1_prime['message'] + "\n-----------------------------" +\
@@ -86,43 +73,18 @@ def start_cracking(Qs, message):
                             break
                         else:
                             print("Second path failed at step {}".format(step))
-                            bytes, message = generate_valid_bytes()
-                            hM0 = md51.hash(bytes)
-                            Qs = md51.Q
                             break
-                
                 if second_path_found:
-                    break  # break the parent while loop to stop cracking
-                    
+                    break  # break the parent while loop to stop cracking   
             else:
                 print("First path failed at step {}".format(step))
-                bytes, message = generate_valid_bytes()
-                hM0 = md51.hash(bytes)
-                Qs = md51.Q
-        else: # Brute force, god speed
-            bytes, message = generate_valid_bytes()
-            hM0 = md51.hash(bytes)
-            Qs = md51.Q
-            
-    
-    # gui.update_output('Collision found: {}'.format(M1))
-    # gui.button_switch()
+
+    gui.update_output('Collision found!\nCheck success.txt')
+    gui.button_switch()
 
 
 if __name__ == '__main__':
+    message = None    
+    gui.start_app()
 
-    from bitarray import bitarray
-
-    # gui.start_app()
-
-    bytes, message = generate_valid_bytes()
-    hM0['message'] = message
-    hM0['hash'] = md51.hash(bytes)
-    hM0['Q'] = md51.Q
-    hM0['T'] = md51.T
-    hM0['F'] = md51.F
-    hM0['R'] = md51.R
-
-    # Start cracking from here:...
-    start_cracking(hM0['Q'], message) 
     
