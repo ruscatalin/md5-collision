@@ -72,7 +72,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>media/volume_low.png</pixmap>
+    <pixmap>../../../../Users/rusca/.designer/backup/media/volume_low.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -97,7 +97,7 @@
     <enum>QSlider::NoTicks</enum>
    </property>
    <property name="tickInterval">
-    <number>50</number>
+    <number>100</number>
    </property>
   </widget>
   <widget class="QWidget" name="verticalLayoutWidget">
@@ -128,10 +128,24 @@
     </item>
    </layout>
   </widget>
-  <zorder>volumeIcon</zorder>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>150</y>
+     <width>101</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Step-by-step</string>
+   </property>
+  </widget>
   <zorder>verticalLayoutWidget</zorder>
-  <zorder>volumeSlider</zorder>
   <zorder>output</zorder>
+  <zorder>checkBox</zorder>
+  <zorder>volumeIcon</zorder>
+  <zorder>volumeSlider</zorder>
  </widget>
  <resources/>
  <connections/>

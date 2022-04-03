@@ -19,15 +19,16 @@ def start_cracking():
     print("Started cracking...")
 
     while True:
-        bytes, message = generate_valid_bytes()
+        bytes, message, _ = generate_valid_bytes()
         hM0['message'] = message
         hM0['hash'] = md51.hash(bytes)
         hM0['Q'] = md51.Q
         hM0['T'] = md51.T
         hM0['F'] = md51.F
         hM0['R'] = md51.R
-        if secrets.randbelow(10000) <= 4:
+        if secrets.randbelow(10000) <= 4: # 0.04% chance to update
             gui.update_output(''.join([str(m) for m in message]))
+            # TODO: maybe write how many hashes per second
 
         if bitconditions16to64(hM0['Q']): # Check the remaining bitconditions of block1
             write_to_file('log.txt', '\n 16-64: ' + message)
@@ -45,7 +46,7 @@ def start_cracking():
                 print("First path found!")
                 second_path_found = False
                 while True:
-                    bytes, m1 = generate_valid_bytes(True, hM0['Q'])
+                    bytes, m1, _ = generate_valid_bytes(True, hM0['Q'])
                     hM1['hash'] = md51.hash(bytes)
                     hM1['Q'] = md51.Q
                     hM1['T'] = md51.T
@@ -81,6 +82,39 @@ def start_cracking():
 
     gui.update_output('Collision found!\nCheck success.txt')
     gui.button_switch()
+
+
+
+def start_cracking_step_by_step():
+
+    print("Started cracking step by step...")
+    while True:
+        bytes, message, hM0['Q'] = generate_valid_bytes()
+        hM0['message'] = message
+
+        if secrets.randbelow(10000) <= 4: # 0.04% chance to update
+            gui.update_output(''.join([str(m) for m in message]))
+
+        md51.message = bytes
+        md51.Q = hM0['Q']
+        all_good = False
+        # Check the remaining 16-64 bitconditions
+        for i in range(16, 64):
+            md51.md5_one_step(i)
+            if bitconditions16to64(md51.Q, exact_step=i):
+                hM0['Q'].append(md51.Q[-1])
+                if i == 64:
+                    all_good = True
+                continue
+            else:
+                md51.Q, md51.T, md51.F, md51.R = None, None, None, None
+                break
+        if not all_good:
+            continue
+        else:
+            write_to_file('log.txt', '\n 16-64: ' + ''.join([str(m) for m in message]))
+
+
 
 
 if __name__ == '__main__':

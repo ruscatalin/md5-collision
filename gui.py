@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QTextEdit, QDialog, QSlider
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QTextEdit, QDialog, QSlider, QCheckBox
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtCore import QUrl
 import sys
@@ -25,6 +25,7 @@ window.setWindowIcon(QIcon(os.path.join(sys.path[0], "media/md5.png")))
 player = QMediaPlayer()
 
 button = window.findChild(QPushButton, 'pushButton')
+checkbox = window.findChild(QCheckBox, 'checkBox')
 output = window.findChild(QLabel, 'output')
 
 volume_icon = window.findChild(QLabel, 'volumeIcon')
@@ -40,7 +41,10 @@ def button_switch():
     button.setEnabled(not status)
 
 def click():
-    thread = threading.Thread(target=main.start_cracking)
+    if checkbox.isChecked():
+        thread = threading.Thread(target=main.start_cracking_step_by_step)
+    else:
+        thread = threading.Thread(target=main.start_cracking)
     thread.start()
     button_switch()
 

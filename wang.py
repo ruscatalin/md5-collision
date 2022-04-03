@@ -568,7 +568,6 @@ def generate_first16_Qs():
     return result
 
 
-
 def generate_first16_Qs_second_block(first_block_Q):
     def fill_hats(bitstring, indexes, t):
         for i in indexes:
@@ -621,7 +620,7 @@ def generate_first16_Qs_second_block(first_block_Q):
     return result
 
 
-def bitconditions16to64(Q):
+def bitconditions16to64(Q, exact_step=None):
     Qt, Qtm1 = None, None
     def check_ones(indexes):
         list = [int(Qt[31 - i]) == 1 for i in indexes]
@@ -639,8 +638,12 @@ def bitconditions16to64(Q):
         list = [Qt[31 - i] != Qtm2[31 - i] for i in indexes]
         return not False in list
 
-    # print("Checking the Wang's bitconditions for the 16->64 rounds...")
-    for t in range(16, 64):
+    if exact_step:
+        first_condition, last_condition = exact_step, exact_step
+    else:
+        first_condition, last_condition = 16, 64
+        
+    for t in range(first_condition, last_condition):
         Qt      = '{:032b}'.format(Q[t])
         Qtm1    = '{:032b}'.format(Q[t-1])
         Qtm2    = '{:032b}'.format(Q[t-2])

@@ -118,7 +118,7 @@ def generate_valid_bytes(second_block=False, first_block_Qs=None):
         generated_Qs = generate_first16_Qs_second_block(first_block_Qs)
     message = generate_message_from_Qs(generated_Qs)
     concatenated_bytes = int_list_to_concatenated_bytes(message)
-    return concatenated_bytes, message
+    return concatenated_bytes, message, generated_Qs
 
 
 def write_to_file(filename, text):
